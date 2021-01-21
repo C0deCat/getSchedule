@@ -9,14 +9,14 @@ import com.android.volley.toolbox.HttpHeaderParser
 import java.util.HashMap
 
 class InputStreamVolleyRequest(method: Int, mUrl: String?, listener: Response.Listener<ByteArray>,
-                               errorListener: Response.ErrorListener?, params: HashMap<String, String>) : Request<ByteArray>(method, mUrl, errorListener) {
+                               errorListener: Response.ErrorListener?, params: HashMap<String, String>?) : Request<ByteArray>(method, mUrl, errorListener) {
     private val mListener: Response.Listener<ByteArray>
-    private val mParams: Map<String, String>
+    private val mParams: Map<String, String>?
 
     //create a static map for directly accessing headers
     var responseHeaders: Map<String, String>? = null
     @Throws(AuthFailureError::class)
-    override fun getParams(): Map<String, String> {
+    override fun getParams(): Map<String, String>? {
         return mParams
     }
 
