@@ -15,6 +15,7 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
     val url = "https://api.vk.com/method/board.getComments?group_id=32678121&topic_id=40272010&count=10&sort=desc&access_token=dfa9cba1dfa9cba1dfa9cba131dfdc346addfa9dfa9cba1bfaf71782f6116399c0ef601&v=5.126"
@@ -32,21 +33,17 @@ class MainActivity : AppCompatActivity() {
         //Request
         //https://api.vk.com/method/board.getComments?group_id=32678121&topic_id=40272010&count=10&sort=desc&access_token=dfa9cba1dfa9cba1dfa9cba131dfdc346addfa9dfa9cba1bfaf71782f6116399c0ef601&v=5.126
         //webView.loadUrl("https://www.google.com/")
-        var messages: JSONArray
-        var downloadUrl = ""
-        val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
-
-
-            { response ->
-                downloadUrl = "Response: %s".format(response.getJSONObject("response").getJSONArray("items")
-                    .getJSONObject(0).getJSONArray("attachments").getJSONObject(0).getJSONObject("doc").getString("url"))
-            },
-            { error ->
-                // TODO: Handle error
+        GlobalScope.launch {
+            val answer1 = async { getText() + "11" }
+            val answer2 = async { getText() + "22"}
+            val string = answer1.await() + answer2.await()
+            runOnUiThread {
+                textView.text = string
             }
-        )
-        queue.add(jsonObjectRequest)
-        queue.start()
-        textView.text = downloadUrl
+        }
+    }
+    suspend fun getText():String {
+        delay(1000L)
+        return "Text!"
     }
 }
