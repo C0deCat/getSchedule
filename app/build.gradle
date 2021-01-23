@@ -15,6 +15,10 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
+        manifestPlaceholders = [pdftronLicenseKey:PDFTRON_LICENSE_KEY]
     }
 
     buildTypes {
@@ -44,4 +48,15 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    implementation "com.pdftron:pdftron:8.1.0"
+    implementation "com.pdftron:tools:8.1.0"
+
+    implementation 'androidx.multidex:multidex:2.0.1'
+
+    // ***** Optionally include the demo library ****
+    implementation "com.pdftron:demo:8.1.0"
+
+    implementation 'com.github.barteksc:android-pdf-viewer:2.8.2'
+    implementation 'com.mindorks.android:prdownloader:0.6.0'
 }

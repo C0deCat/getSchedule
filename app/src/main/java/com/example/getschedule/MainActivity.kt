@@ -3,6 +3,7 @@ package com.example.getschedule
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -18,18 +19,27 @@ import com.android.volley.toolbox.Volley
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlinx.coroutines.*
+import java.io.File
 import java.lang.Exception
+import android.net.Uri
+import com.github.barteksc.pdfviewer.PDFView
+import com.pdftron.pdf.Convert
+import com.pdftron.pdf.PDFDoc
+import com.pdftron.pdf.utils.Utils
+import com.pdftron.sdf.SDFDoc
 
 class MainActivity : AppCompatActivity() {
     val reqUrl = "https://api.vk.com/method/board.getComments?group_id=32678121&topic_id=40272010&count=10&sort=desc&access_token=dfa9cba1dfa9cba1dfa9cba131dfdc346addfa9dfa9cba1bfaf71782f6116399c0ef601&v=5.126"
     lateinit var queue: RequestQueue
     lateinit var textView: TextView
+    lateinit var pdfView: PDFView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         textView = findViewById(R.id.textView2)
         queue = Volley.newRequestQueue(this)
+        pdfView = findViewById(R.id.pdfView)
     }
 
     fun openSchedule(view: View) {
@@ -49,8 +59,16 @@ class MainActivity : AppCompatActivity() {
                     var outputStream = openFileOutput(filename, Context.MODE_PRIVATE)
                     outputStream.write(response)
                     outputStream.close()
+
+                    val doc = PDFDoc()
+                    Convert.officeToPdf(doc, filesDir.path+"/$filename", null)
+                    doc.save(getExternalFilesDir(null)?.path + "/downloaded.pdf", SDFDoc.SaveMode.COMPATIBILITY, null)
+
+                    pdfView.fromFile(File(getExternalFilesDir(null), "downloaded.pdf"))
+                        .defaultPage(0).spacing(10).load()
+
                     runOnUiThread {
-                        textView.text = filesDir.absolutePath
+                        textView.text = getExternalFilesDir(null)?.path
                     }
                 }
             } catch (e: Exception) {
