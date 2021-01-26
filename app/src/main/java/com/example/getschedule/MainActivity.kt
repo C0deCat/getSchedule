@@ -33,13 +33,18 @@ class MainActivity : AppCompatActivity() {
     lateinit var queue: RequestQueue
     lateinit var textView: TextView
     lateinit var pdfView: PDFView
+    lateinit var downloadService: VkDownloadService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        textView = findViewById(R.id.textView2)
-        queue = Volley.newRequestQueue(this)
         pdfView = findViewById(R.id.pdfView)
+        queue = Volley.newRequestQueue(this)
+        downloadService = VkDownloadService(this)
+        GlobalScope.launch {
+            val result = downloadService.downloadSchedule()
+            pdfView.fromFile(result[0]).defaultPage(0).spacing(10).load()
+        }
     }
 
     fun openSchedule(view: View) {
@@ -47,32 +52,9 @@ class MainActivity : AppCompatActivity() {
         //https://api.vk.com/method/board.getComments?group_id=32678121&topic_id=40272010&count=10&sort=desc&access_token=dfa9cba1dfa9cba1dfa9cba131dfdc346addfa9dfa9cba1bfaf71782f6116399c0ef601&v=5.126
         //webView.loadUrl("https://www.google.com/")
         GlobalScope.launch {
-            val dUrl = retrieveLink()
-            val future = RequestFuture.newFuture<ByteArray>()
-            val downloadRequest = InputStreamVolleyRequest(Request.Method.GET, dUrl, future, future, null)
-            queue.add(downloadRequest)
-
-            try {
-                val response = future.get()
-                if (response != null) {
-                    val filename = "downloaded.doc"
-                    var outputStream = openFileOutput(filename, Context.MODE_PRIVATE)
-                    outputStream.write(response)
-                    outputStream.close()
-
-                    val doc = PDFDoc()
-                    Convert.officeToPdf(doc, filesDir.path+"/$filename", null)
-                    doc.save(getExternalFilesDir(null)?.path + "/downloaded.pdf", SDFDoc.SaveMode.COMPATIBILITY, null)
-
-                    pdfView.fromFile(File(getExternalFilesDir(null), "downloaded.pdf"))
-                        .defaultPage(0).spacing(10).load()
-
-                    runOnUiThread {
-                        textView.text = getExternalFilesDir(null)?.path
-                    }
-                }
-            } catch (e: Exception) {
-                textView.text = "Download Failed"
+            val result = downloadService.downloadSchedule()
+            runOnUiThread {
+                textView.text = result.toString()
             }
         }
     }

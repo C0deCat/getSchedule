@@ -6,25 +6,53 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.RequestFuture
 import com.android.volley.toolbox.Volley
+import com.pdftron.pdf.Convert
+import com.pdftron.pdf.PDFDoc
+import com.pdftron.sdf.SDFDoc
 import org.json.JSONObject
 import java.util.concurrent.ExecutionException
+import kotlinx.coroutines.*
+import java.io.File
 
-class VkDownloadService(context: Context) {
-    val api_url = "https://api.vk.com/method/board.getComments"
-    val token = "dfa9cba1dfa9cba1dfa9cba131dfdc346addfa9dfa9cba1bfaf71782f6116399c0ef601"
-    val version = "5.126"
+class VkDownloadService(private var context: Context) {
+    private val api_url = "https://api.vk.com/method/board.getComments"
+    private val token = "dfa9cba1dfa9cba1dfa9cba131dfdc346addfa9dfa9cba1bfaf71782f6116399c0ef601"
+    private val version = "5.126"
 
-    var queue: RequestQueue
-    var context: Context
+    private var queue: RequestQueue = Volley.newRequestQueue(context)
 
-    init {
-        this.queue = Volley.newRequestQueue(context)
-        this.context = context
-    }
-
-    fun downloadSchedule() {
+    fun downloadSchedule(): List<File> {
         val links = retrieveLinks()
         val future = RequestFuture.newFuture<ByteArray>()
+        val fileNames = mutableListOf<File>()
+
+        for (link in links) {
+            val request = InputStreamVolleyRequest(Request.Method.GET, link.second, future, future, null)
+            queue.add(request)
+            try {
+                val response = future.get()
+                if (response != null) {
+                    val outputStream = context.openFileOutput(link.first, Context.MODE_PRIVATE)
+                    outputStream.write(response)
+                    outputStream.close()
+
+                    val doc = PDFDoc()
+                    val path = context.filesDir.path+"/${link.first}"
+                    Convert.officeToPdf(doc, path, null)
+
+                    val filename = link.first + ".pdf"
+                    doc.save(context.getExternalFilesDir(null)?.path + "/${filename}",
+                            SDFDoc.SaveMode.COMPATIBILITY, null)
+                    fileNames.add(File(context.getExternalFilesDir(null), filename))
+                }
+            }
+            catch (e: InterruptedException) {
+                throw e
+            } catch (e: ExecutionException) {
+                throw e
+            }
+        }
+        return fileNames
     }
 
     private fun retrieveLinks(linkscount: Int = 10, messageschecked: Int = 20):List<Pair<String, String>> {
@@ -50,7 +78,7 @@ class VkDownloadService(context: Context) {
                 crawler = crawler.getJSONObject("doc")
                 linksarray.add(Pair(crawler.getString("title"), crawler.getString("url")))
 
-                if (linksarray.size == 10) break
+                if (linksarray.size == linkscount) break
             }
         } catch (e: InterruptedException) {
             throw e
