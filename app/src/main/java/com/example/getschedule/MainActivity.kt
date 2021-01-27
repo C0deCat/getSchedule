@@ -35,6 +35,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var pdfView: PDFView
     lateinit var downloadService: VkDownloadService
 
+    lateinit var scheduleFiles: List<File>
+    var cursor = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -42,8 +45,8 @@ class MainActivity : AppCompatActivity() {
         queue = Volley.newRequestQueue(this)
         downloadService = VkDownloadService(this)
         GlobalScope.launch {
-            val result = downloadService.downloadSchedule()
-            pdfView.fromFile(result[0]).defaultPage(0).spacing(10).load()
+            scheduleFiles = downloadService.downloadSchedule()
+            pdfView.fromFile(scheduleFiles[cursor]).defaultPage(0).spacing(10).load()
         }
     }
 
@@ -73,5 +76,14 @@ class MainActivity : AppCompatActivity() {
             return null
         }
         return str
+    }
+
+    fun goForward(view: View) {
+        cursor++
+        pdfView.fromFile(scheduleFiles[cursor]).defaultPage(0).spacing(10).load()
+    }
+    fun goBack(view: View) {
+        cursor--
+        pdfView.fromFile(scheduleFiles[cursor]).defaultPage(0).spacing(10).load()
     }
 }
