@@ -23,10 +23,10 @@ class VkDownloadService(private var context: Context) {
 
     fun downloadSchedule(): List<File> {
         val links = retrieveLinks()
-        val future = RequestFuture.newFuture<ByteArray>()
         val fileNames = mutableListOf<File>()
 
         for (link in links) {
+            val future = RequestFuture.newFuture<ByteArray>()
             val request = InputStreamVolleyRequest(Request.Method.GET, link.second, future, future, null)
             queue.add(request)
             try {
@@ -68,7 +68,8 @@ class VkDownloadService(private var context: Context) {
 
         try {
             val messages = future.get().getJSONObject("response").getJSONArray("items")
-            for (i in 0 until messageschecked) {
+            val count = messages.length()
+            for (i in 0 until count) {
                 var crawler = messages.getJSONObject(i)
                 if (!crawler.has("attachments")) continue
 
@@ -76,6 +77,7 @@ class VkDownloadService(private var context: Context) {
                 if (crawler.getString("type") != "doc") continue
 
                 crawler = crawler.getJSONObject("doc")
+                if (crawler.getString("ext") !in arrayOf("doc", "docx")) continue
                 linksarray.add(Pair(crawler.getString("title"), crawler.getString("url")))
 
                 if (linksarray.size == linkscount) break
