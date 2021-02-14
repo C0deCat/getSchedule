@@ -30,11 +30,9 @@ import com.pdftron.pdf.utils.Utils
 import com.pdftron.sdf.SDFDoc
 
 class MainActivity : AppCompatActivity() {
-    lateinit var queue: RequestQueue
-    lateinit var textView: TextView
     lateinit var pdfView: PDFView
     lateinit var downloadService: VkDownloadService
-
+    lateinit var textView: TextView
     lateinit var scheduleFiles: List<File>
     var cursor = 0
     lateinit var buttonForward: Button
@@ -43,19 +41,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        scheduleFiles = listOf()
         buttonForward = findViewById(R.id.forwardButton)
         buttonBack = findViewById(R.id.backwardButton)
+        textView = findViewById(R.id.textView)
+        buttonControl()
 
         pdfView = findViewById(R.id.pdfView)
-        queue = Volley.newRequestQueue(this)
         downloadService = VkDownloadService(this)
         GlobalScope.launch {
-            scheduleFiles = downloadService.downloadSchedule()
-            runOnUiThread {
-                buttonControl()
+            try {
+                scheduleFiles = downloadService.downloadSchedule()
+                runOnUiThread {
+                    buttonControl()
+                }
+                pdfView.fromFile(scheduleFiles[cursor]).defaultPage(0).spacing(10).load()
             }
-            pdfView.fromFile(scheduleFiles[cursor]).defaultPage(0).spacing(10).load()
+            catch (e: Exception) {
+                runOnUiThread {
+                    textView.text = getString(R.string.ErrorMessage)
+                }
+            }
         }
     }
 
@@ -72,6 +78,10 @@ class MainActivity : AppCompatActivity() {
 
     fun buttonControl() {
         when {
+            scheduleFiles.isNullOrEmpty() -> {
+                buttonForward.isEnabled = false
+                buttonBack.isEnabled = false
+            }
             cursor == 0 -> {
                 buttonForward.isEnabled = true
                 buttonBack.isEnabled = false

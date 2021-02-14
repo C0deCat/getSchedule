@@ -3,4 +3,5 @@
     <string name="get_shit_done">Get shit done!</string>
     <string name="forward">forward</string>
     <string name="backward">backward</string>
+    <string name="ErrorMessage">Error! Please check your internet connection!</string>
 </resources>
